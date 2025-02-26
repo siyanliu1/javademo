@@ -22,7 +22,7 @@ public class UserController {
 
     // User Registration - POST /user
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('PREM_WRITE')")
+    @PreAuthorize("hasAnyAuthority('PERM_WRITE')")
     public ResponseEntity<User> registerUser(@RequestBody UserRegistrationRequest request) {
         User createdUser = userService.registerUser(request);
         return ResponseEntity.ok(createdUser);

@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -14,6 +13,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,37 +23,45 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Configuration("userSecurityConfig") // 指定不同的 bean 名称
-@EnableMethodSecurity  // 启用 @PreAuthorize 等注解
+@Configuration
+@EnableMethodSecurity  // 启用方法级安全控制，例如 @PreAuthorize
 public class SecurityConfig {
 
     @Value("${jwt.secret:secret}")
     private String jwtSecret;
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
 
-    @Bean(name = "userFilterChain")
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                // 设置为无状态，适用于基于 JWT 的认证
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login").permitAll()  // 允许认证服务先登录
-                        .anyRequest().authenticated()
+                        .requestMatchers("/login").permitAll()  // 登录端点允许匿名
+                        .anyRequest().authenticated()           // 其他请求都需要认证
                 )
+                // 添加 JWT 解析过滤器，用于从请求头解析 token
                 .addFilterBefore(new JwtAuthenticationFilter(jwtSecret), UsernamePasswordAuthenticationFilter.class)
-                .httpBasic(Customizer.withDefaults());
+                // 如果你不需要 Basic 认证，可以把下面这行删除
+                .httpBasic(httpBasic -> httpBasic.disable());
         return http.build();
     }
 
-    // 内部 JwtAuthenticationFilter 类：从请求头中解析 token 并设置认证信息
+    // 内部 JWT 解析过滤器
     public static class JwtAuthenticationFilter extends org.springframework.web.filter.OncePerRequestFilter {
         private final String jwtSecret;
+
         public JwtAuthenticationFilter(String jwtSecret) {
             this.jwtSecret = jwtSecret;
         }
+
         @Override
         protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
                 throws ServletException, IOException {
-
             String header = request.getHeader("Authorization");
             if (header != null && header.startsWith("Bearer ")) {
                 String token = header.substring(7);
@@ -72,7 +81,6 @@ public class SecurityConfig {
 
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(username, null, authorities);
-
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } catch (Exception e) {
                     SecurityContextHolder.clearContext();
