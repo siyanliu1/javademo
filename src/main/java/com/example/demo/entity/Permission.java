@@ -6,28 +6,26 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@Table(name = "permissions")
+@Table(name = "permission")
 public class Permission {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "permissions")
-    private Set<User> users = new HashSet<>();
+    @OneToMany(mappedBy = "permission", cascade = CascadeType.ALL)
+    private Set<UserPermission> userPermissions;
 
     public Permission() {}
 
-    public Permission(String name) {
-        this.name = name;
-    }
-
-    // Getters and Setters
-
+    // Getter 和 Setter
     public Long getId() {
         return id;
+    }
+    public void setId(Long id) {
+        this.id = id;
     }
     public String getName() {
         return name;
@@ -35,10 +33,10 @@ public class Permission {
     public void setName(String name) {
         this.name = name;
     }
-    public Set<User> getUsers() {
-        return users;
+    public Set<UserPermission> getUserPermissions() {
+        return userPermissions;
     }
-    public void setUsers(Set<User> users) {
-        this.users = users;
+    public void setUserPermissions(Set<UserPermission> userPermissions) {
+        this.userPermissions = userPermissions;
     }
 }

@@ -23,13 +23,8 @@ public class User {
     private UserDetail userDetail;
 
 
-    @ManyToMany
-    @JoinTable(
-            name = "UserPermssion",
-            joinColumns = @JoinColumn(name = "userId"),
-            inverseJoinColumns = @JoinColumn(name = "permissionId")
-    )
-    private Set<Permission> permissions = new HashSet<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<UserPermission> userPermissions = new HashSet<>();
 
     public User(){}
 
@@ -65,7 +60,11 @@ public class User {
         this.userDetail = userDetail;
     }
 
-    public Set<Permission> getPermissions() { return permissions; }
-    public void setPermissions(Set<Permission> permissions) { this.permissions = permissions; }
+    public Set<UserPermission> getUserPermissions() {
+        return userPermissions;
+    }
+    public void setUserPermissions(Set<UserPermission> userPermissions) {
+        this.userPermissions = userPermissions;
+    }
 
 }
