@@ -4,6 +4,7 @@ import com.example.demo.dto.UserInfoResponse;
 import com.example.demo.dto.UserRegistrationRequest;
 import com.example.demo.entity.User;
 import com.example.demo.entity.UserDetail;
+import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.projection.UserProjection;
 import com.example.demo.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -63,8 +64,11 @@ public class UserService {
 
     // Get user info by user id
     public UserInfoResponse getUserInfo(Long userId) {
+//        User user = userRepository.findById(userId)
+//                .orElseThrow(() -> new RuntimeException("User not found"));
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
+
         return new UserInfoResponse(
                 user.getId(),
                 user.getUsername(),
