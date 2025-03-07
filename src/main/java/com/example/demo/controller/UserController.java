@@ -4,7 +4,7 @@ import com.example.demo.dto.UserRegistrationRequest;
 import com.example.demo.dto.UserInfoResponse;
 import com.example.demo.entity.User;
 import com.example.demo.projection.UserProjection;
-import com.example.demo.Service.UserService;
+import com.example.demo.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
