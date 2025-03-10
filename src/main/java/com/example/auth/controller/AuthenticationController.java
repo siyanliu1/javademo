@@ -7,7 +7,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -16,14 +16,14 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 @RestController
 public class AuthenticationController {
 
     private final AuthenticationManager authenticationManager;
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
 
-    @Value("${jwt.secret:secret}")
+    // 请确保在配置文件中提供的是一个 Base64 编码后的强密钥
+    @Value("${jwt.secret:defaultBase64Secret==}")
     private String jwtSecret;
 
     @Value("${jwt.expiration:3600000}")
@@ -49,12 +49,14 @@ public class AuthenticationController {
                     .map(auth -> auth.getAuthority())
                     .collect(Collectors.toList());
 
+            // 先对 Base64 编码的密钥进行解码
+            byte[] secretBytes = Base64.getDecoder().decode(jwtSecret);
             String token = Jwts.builder()
                     .setSubject(username)
                     .claim("authorities", authorities)
                     .setIssuedAt(new Date())
                     .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationInMs))
-                    .signWith(SignatureAlgorithm.HS512, jwtSecret.getBytes())
+                    .signWith(SignatureAlgorithm.HS512, secretBytes)
                     .compact();
 
             Map<String, Object> response = new HashMap<>();
