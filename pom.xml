@@ -104,6 +104,11 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <excludes>
+                        <exclude>**/auth/**</exclude>
+                    </excludes>
+                </configuration>
             </plugin>
         </plugins>
 

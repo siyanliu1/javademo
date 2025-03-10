@@ -2,7 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.UserRegistrationRequest;
 import com.example.demo.dto.UserInfoResponse;
-// import com.example.demo.dto.UserSummary;
+import com.example.demo.projection.UserProjection;
 import com.example.demo.entity.User;
 import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.service.UserService;
@@ -14,9 +14,9 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.example.demo.projection.UserProjection;
 
 import java.util.Arrays;
 import java.util.List;
@@ -51,6 +51,7 @@ public class UserControllerTest {
     private UserService userService;
 
     @Test
+    @WithMockUser(username = "testuser", authorities = {"PERM_WRITE", "PERM_DELETE", "PERM_UPDATE", "PERM_READ"})
     public void testRegisterUser() throws Exception {
         UserRegistrationRequest request = new UserRegistrationRequest();
         request.setUsername("testuser");
@@ -77,6 +78,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "testuser", authorities = {"PERM_DELETE"})
     public void testDeleteUserSuccess() throws Exception {
         mockMvc.perform(delete("/user")
                         .param("userId", "1"))
@@ -85,6 +87,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "testuser", authorities = {"PERM_DELETE"})
     public void testDeleteUserNotFound() throws Exception {
         doThrow(new UserNotFoundException("User not found")).when(userService).deleteUser(2L);
         mockMvc.perform(delete("/user")
@@ -94,6 +97,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "testuser", authorities = {"PERM_UPDATE"})
     public void testUpdateUserStatus() throws Exception {
         User updatedUser = new User();
         updatedUser.setId(1L);
@@ -109,23 +113,8 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.status").value(true));
     }
 
-//    @Test
-//    public void testListAllUsers() throws Exception {
-//        UserSummary summary1 = new UserSummary(1L, "user1");
-//        UserSummary summary2 = new UserSummary(2L, "user2");
-//        List<UserSummary> summaries = Arrays.asList(summary1, summary2);
-//
-//        Mockito.when(userService.getAllUsers()).thenReturn(summaries);
-//
-//        mockMvc.perform(get("/user"))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$[0].id").value(1L))
-//                .andExpect(jsonPath("$[0].username").value("user1"))
-//                .andExpect(jsonPath("$[1].id").value(2L))
-//                .andExpect(jsonPath("$[1].username").value("user2"));
-//    }
-
     @Test
+    @WithMockUser(username = "testuser", authorities = {"PERM_READ"})
     public void testListAllUsers() throws Exception {
         // Create anonymous implementations of UserProjection
         UserProjection user1 = new UserProjection() {
@@ -160,6 +149,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "testuser", authorities = {"PERM_READ"})
     public void testGetUserInfo() throws Exception {
         UserInfoResponse infoResponse = new UserInfoResponse(1L, "user1", "First", "Last", "user1@example.com");
 
